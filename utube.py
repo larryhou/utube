@@ -317,37 +317,6 @@ def download_channel(channel):
         print('[%s]'%re.sub(r'\.\d+Z$', '', snippet['publishedAt']), 'https://www.youtube.com/watch?v=%s'%item['id']['videoId'], title)
         download_movie(movie_id=item['id']['videoId'])
 
-def query_recent_videos(channel, time_span, max_result):
-    start_time = time.localtime(time.mktime(time.localtime()) - time_span)
-    video_list = []
-    for playlist in query_api_playlist(channel=channel).get('items'):
-        playlist_id = playlist.get('id')
-        print('[PLAY]', playlist_id, playlist['snippet']['title'])
-        playlist_list = query_api_playlist_items(id=playlist_id, max_result=max_result).get('items')
-        playlist_list.sort(cmp=lambda a, b: -1 if a['contentDetails'].get('videoPublishedAt') > b['contentDetails'].get('videoPublishedAt') else 1)
-        for item in playlist_list:
-            detail = item.get('contentDetails')
-            if 'videoPublishedAt' not in detail: continue
-            title = item['snippet']['title']
-            print('    [VIDEO]', detail['videoPublishedAt'], detail['videoId'], title)
-            time_string = re.sub(r'\.\d+Z$','', detail.get('videoPublishedAt'))
-            publish_time = time.strptime(time_string, '%Y-%m-%dT%H:%M:%S')
-            if publish_time >= start_time:
-                video_item = (detail.get('videoId'), publish_time, title)
-                video_list.append(video_item)
-    from operator import itemgetter
-    video_list.sort(key=itemgetter(1), reverse=True)
-    for n in range(len(video_list)):
-        video_item = video_list[n]
-        print(time.strftime('[%Y-%m-%d %H:%M:%S]', video_item[1]), 'https://www.youtube.com/watch?v=%s'%video_item[0], '\'%s\''%(video_item[-1]))
-
-def parse_time_span(value, unit):
-    if unit == 's':return int(value)
-    if unit == 'm':return int(value) * 60
-    if unit == 'h':return int(value) * 3600
-    if unit == 'd':return int(value) * 3600 * 24
-    return int(value)
-
 def get_movie_id(url:str)->str:
     return decode_parameters(url.split('?')[-1]).get('v')
 
@@ -356,8 +325,6 @@ if __name__ == '__main__':
     arguments.add_argument('--command', '-c', choices=commands.option_choices(), help='command')
     arguments.add_argument('--tag', '-t', type=int, help='Youtube media tag, you can get tag list $ ./utube.py -c check --url xxx')
     arguments.add_argument('--channel', '-l', default='UCQT2Ai7hQMnnvVTGd6GdrOQ', help='Youtube channel id')
-    arguments.add_argument('--time-span', '-s', default=7, type=int, help='time span')
-    arguments.add_argument('--time-unit', '-n', default='d', choices=['s', 'm', 'h', 'd'], help='s:second m:minute h:hour d:day')
     arguments.add_argument('--max-result', '-m', default=20, type=int, help='max search result')
     arguments.add_argument('--channel-index', '-i', type=int, choices=range(len(CHANNEL_SETTING)))
     arguments.add_argument('--url', '-u', help='Youtube video page url')
