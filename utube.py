@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import requests, json, argparse, sys, re, urllib, enum, io, tqdm, math, shutil, os, pyquery
+import requests, json, argparse, sys, re, urllib, enum, io, tqdm, math, shutil, os, time
 from typing import Tuple,List,Dict
 
 YOUTUBE_API_KEY = 'AIzaSyCyLSmcEDJt3HaLFK0_LdJYPkq0RFAVzKA'
@@ -210,28 +210,63 @@ def decode_media_2(data:Dict):
     media.extension = media.file_type.split('/')[-1]
     return media
 
+def decode_player_api(content:bytes)->Dict:
+    keyword = b'ytplayer.config'
+    keyword_length = len(keyword)
+    content_length = len(content)
+    for n in range(content_length):
+        char = content[n]
+        if char == keyword[0]:
+            match = content[n:n+keyword_length]
+            if keyword[-1] == match[-1] and keyword == match:
+                n += keyword_length
+                api_data_available = False
+                for m in range(n, content_length):
+                    char = content[m]
+                    if char == 123: # '{'
+                        api_data_available = content[n:m].strip() == b'='
+                        break
+                if api_data_available: break
+    if 0 < n < content_length:
+        offset = n
+        balance, position = -1, 0
+        for i in range(n, content_length):
+            char = content[i]
+            if char == 123: # '{'
+                if balance == -1: offset, balance = i, 0
+                balance += 1
+            if char == 125: # '}'
+                balance -= 1
+            if balance == 0:
+                position = i + 1
+                break
+        data = json.loads(content[offset:position]) # type: dict
+        return data.get('args')
+    return {}
+
 def decode_media_assets(movie_id:str, movie_info:Dict = None)->Dict[int, MediaAsset]:
     dont_retry = False
     if not movie_info:
-        params = decode_parameters('el=embedded&ps=default&eurl=&gl=US&hl=en')
-        params['video_id'] = movie_id
-        response = requests.get('https://www.youtube.com/get_video_info', params=params)
-        movie_info = decode_parameters(response.text)
+        response = requests.get(url='https://www.youtube.com/watch?v={}'.format(movie_id))
+        timestamp = time.clock()
+        movie_info = decode_player_api(response.content)
+        if options.verbose: print('decode_player_api {:.3f}s'.format(time.clock() - timestamp))
     else:
         dont_retry = True
     title = movie_info.get('title')
     asset_map = {} # type: Dict[int, MediaAsset]
-    if 'adaptive_fmts' in movie_info:
-        for item in movie_info.get('adaptive_fmts').split(','):
+    adaptive_fmts = movie_info.get('adaptive_fmts')
+    if adaptive_fmts:
+        for item in adaptive_fmts.split(','):
             download_info = decode_parameters(item)
             if not download_info: continue
             media = decode_media_1(download_info)
             media.title = title
             asset_map[media.itag] = media
             if options.verbose: print(media)
-    url_encoded_fmt_stream_map = movie_info.get('url_encoded_fmt_stream_map')
-    if url_encoded_fmt_stream_map:
-        for item in url_encoded_fmt_stream_map.split(','):
+    url_encoded_fmts = movie_info.get('url_encoded_fmt_stream_map')
+    if url_encoded_fmts:
+        for item in url_encoded_fmts.split(','):
             download_info = decode_parameters(item)
             if not download_info: continue
             media = decode_media_2(download_info)
@@ -239,21 +274,12 @@ def decode_media_assets(movie_id:str, movie_info:Dict = None)->Dict[int, MediaAs
             media.title = title
             if options.verbose: print(media)
     else:
-        if dont_retry: return
-        html = pyquery.PyQuery(url='https://www.youtube.com/watch?v={}'.format(movie_id))
-        script = re.sub(r'^.+ytplayer\.config\s*\=\s*', '', html.find('div#player-api').next().next().text())
-        count, length = -1, 0
-        for n in range(len(script)):
-            char = script[n]
-            if char == '{':
-                if count == -1: count = 0
-                count += 1
-            if char == '}':
-                count -= 1
-            if n > 1 and count == 0:
-                length = n + 1
-                break
-        return decode_media_assets(movie_id, movie_info=json.loads(script[:length])['args'])
+        if dont_retry: return {}
+        params = decode_parameters('el=embedded&ps=default&gl=US&hl=en')
+        params['video_id'] = movie_id
+        response = requests.get('https://www.youtube.com/get_video_info', params=params)
+        api_data = decode_parameters(response.text)
+        return decode_media_assets(movie_id, movie_info=api_data)
     return asset_map
 
 def check_movie(movie_id:str):
