@@ -223,6 +223,7 @@ def decode_media_assets(movie_id:str)->Dict[int, MediaAsset]:
     if 'adaptive_fmts' in movie_info:
         for item in movie_info.get('adaptive_fmts').split(','):
             download_info = decode_parameters(item)
+            if not download_info: continue
             media = decode_media_1(download_info)
             media.title = title
             asset_map[media.itag] = media
@@ -230,6 +231,7 @@ def decode_media_assets(movie_id:str)->Dict[int, MediaAsset]:
     if 'url_encoded_fmt_stream_map' in movie_info:
         for item in movie_info.get('url_encoded_fmt_stream_map').split(','):
             download_info = decode_parameters(item)
+            if not download_info: continue
             media = decode_media_2(download_info)
             asset_map[media.itag] = media
             media.title = title
