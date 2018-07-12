@@ -218,7 +218,7 @@ def decode_media_assets(movie_id:str)->Dict[int, MediaAsset]:
     response = requests.get('https://www.youtube.com/get_video_info', params=params)
     movie_info = decode_parameters(response.text)
     title = movie_info.get('title')
-    print(movie_info)
+    # print(movie_info)
     asset_map = {} # type: Dict[int, MediaAsset]
     if 'adaptive_fmts' in movie_info:
         for item in movie_info.get('adaptive_fmts').split(','):
