@@ -17,6 +17,8 @@ class commands(object):
     check = 'check'
     download_channel = 'download-channel'
     check_channel = 'check-channel'
+    download_list = 'download-list'
+    check_list = 'check-list'
 
     @classmethod
     def option_choices(cls):
@@ -40,6 +42,7 @@ class ArgumentOptions(object):
         self.channel_index = data.channel_index # type: int
         self.download_path = data.download_path # type: str
         self.verbose = data.verbose # type: bool
+        self.playlist = data.playlist # type: str
 
 class CurrencyFormatter(object):
     def __init__(self, length:int = 10, align_right:bool = True):
@@ -112,7 +115,7 @@ def query_api_video(id, part = 'snippet,contentDetails,statistics'):
     assert response.status_code == 200, tojson(response.json())
     print(tojson(response.json()))
 
-def query_api_search(channel, part = 'snippet', max_result = 50):
+def query_api_channel_search(channel:str, part:str = 'snippet', fields:str = None, max_result:int = 50):
     params = {
         'channelId': channel,
         'part': part,
@@ -122,12 +125,13 @@ def query_api_search(channel, part = 'snippet', max_result = 50):
         'type':'video',
         'key': YOUTUBE_API_KEY
     }
+    if fields: params['fields'] = fields
     response = requests.get('https://www.googleapis.com/youtube/v3/search', params=params)
     assert response.status_code == 200, tojson(response.json())
     return response.json()
     # print(tojson(response.json()))
 
-def query_api_playlist(channel, part = 'snippet,contentDetails,status', max_result = 50):
+def query_api_playlist(channel:str, part:str = 'snippet,contentDetails,status', max_result:int = 50):
     params = {
         'channelId': channel,
         'part': part,
@@ -139,13 +143,14 @@ def query_api_playlist(channel, part = 'snippet,contentDetails,status', max_resu
     return response.json()
     # print(tojson(response.json()))
 
-def query_api_playlist_items(id, part = 'snippet,contentDetails', max_result = 10):
+def query_api_playlist_items(id, part = 'snippet,contentDetails', fields:str = None, max_result = 10):
     params = {
         'playlistId': id,
         'part': part,
         'maxResults':max_result,
         'key': YOUTUBE_API_KEY
     }
+    if fields: params['fields'] = fields
     response = requests.get('https://www.googleapis.com/youtube/v3/playlistItems', params=params)
     assert response.status_code == 200, tojson(response.json())
     return response.json()
@@ -233,16 +238,33 @@ def check_movie(movie_id:str):
         if not options.verbose: print(media)
 
 def check_channel(channel:str):
-    description_printed = False
-    result = query_api_search(channel=channel, max_result=options.max_result)
+    result = query_api_channel_search(channel=channel, max_result=options.max_result,
+                                      fields='items(snippet(title,publishedAt),contentDetails(videoId))',
+                                      part='snippet,contentDetails')
     for item in result.get('items'):
         snippet = item['snippet']
         title = snippet['title']
-        if not description_printed:
-            description_printed = True
-            print('%s[%s]' % (snippet['channelId'], snippet['channelTitle']))
         print('[%s]' % re.sub(r'\.\d+Z$', '', snippet['publishedAt']),
               'https://www.youtube.com/watch?v=%s' % item['id']['videoId'], title)
+
+def check_list(list_id:str):
+    result = query_api_playlist_items(id=list_id,
+                                      max_result=options.max_result,
+                                      fields='items(snippet(title,publishedAt),contentDetails(videoId))',
+                                      part='snippet,contentDetails')
+    for item in result.get('items'):
+        snippet = item['snippet']
+        title = snippet['title']
+        print('[%s]' % re.sub(r'\.\d+Z$', '', snippet['publishedAt']),
+              'https://www.youtube.com/watch?v=%s' % item['contentDetails']['videoId'], title)
+
+def download_list(list_id:str):
+    playlist_info = query_api_playlist_items(id=list_id,
+                                             max_result=options.max_result,
+                                             part='contentDetails',
+                                             fields='items(contentDetails(videoId))')
+    for item in playlist_info.get('items'):  # type: dict
+        download_movie(movie_id=item['contentDetails']['videoId'])
 
 def download_movie(movie_id:str):
     asset_map = decode_media_assets(movie_id)
@@ -280,7 +302,7 @@ def download(url:str, file_name:str):
 
 def download_channel(channel):
     description_printed = False
-    result = query_api_search(channel=channel, max_result=options.max_result)
+    result = query_api_channel_search(channel=channel, max_result=options.max_result)
     for item in result.get('items'):
         snippet = item['snippet']
         title = snippet['title']
@@ -336,6 +358,7 @@ if __name__ == '__main__':
     arguments.add_argument('--url', '-u', help='Youtube video page url')
     arguments.add_argument('--download-path', '-d', help='used for downloaded videos')
     arguments.add_argument('--verbose', '-v', action='store_true', help='verbose print')
+    arguments.add_argument('--playlist', '-p', help='Youtube playlist id')
     global options
     options = ArgumentOptions(data=arguments.parse_args(sys.argv[1:]))
     target_channel = options.channel
@@ -355,3 +378,9 @@ if __name__ == '__main__':
     elif options.command == commands.check_channel:
         assert target_channel
         check_channel(target_channel)
+    elif options.command == commands.check_list:
+        assert options.playlist
+        check_list(list_id=options.playlist)
+    elif options.command == commands.download_list:
+        assert options.playlist
+        download_list(list_id=options.playlist)
