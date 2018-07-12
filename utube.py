@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import requests, json, argparse, sys, time, re, urllib, enum, io, tqdm, math, shutil, os
+import requests, json, argparse, sys, re, urllib, enum, io, tqdm, math, shutil, os
 from typing import Tuple,List,Dict
 
 YOUTUBE_API_KEY = 'AIzaSyCyLSmcEDJt3HaLFK0_LdJYPkq0RFAVzKA'
