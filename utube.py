@@ -219,18 +219,20 @@ def decode_media_assets(movie_id:str)->Dict[int, MediaAsset]:
     movie_info = decode_parameters(response.text)
     title = movie_info.get('title')
     asset_map = {} # type: Dict[int, MediaAsset]
-    for item in movie_info.get('adaptive_fmts').split(','):
-        download_info = decode_parameters(item)
-        media = decode_media_1(download_info)
-        media.title = title
-        asset_map[media.itag] = media
-        if options.verbose: print(media)
-    for item in movie_info.get('url_encoded_fmt_stream_map').split(','):
-        download_info = decode_parameters(item)
-        media = decode_media_2(download_info)
-        asset_map[media.itag] = media
-        media.title = title
-        if options.verbose: print(media)
+    if 'adaptive_fmts' in movie_info:
+        for item in movie_info.get('adaptive_fmts').split(','):
+            download_info = decode_parameters(item)
+            media = decode_media_1(download_info)
+            media.title = title
+            asset_map[media.itag] = media
+            if options.verbose: print(media)
+    if 'url_encoded_fmt_stream_map' in movie_info:
+        for item in movie_info.get('url_encoded_fmt_stream_map').split(','):
+            download_info = decode_parameters(item)
+            media = decode_media_2(download_info)
+            asset_map[media.itag] = media
+            media.title = title
+            if options.verbose: print(media)
     return asset_map
 
 def check_movie(movie_id:str):
