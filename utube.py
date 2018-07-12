@@ -36,8 +36,6 @@ class ArgumentOptions(object):
         self.tag = data.tag # type: int
         self.url = data.url  # type: str
         self.channel = data.channel # type: str
-        self.time_span = data.time_span # type: int
-        self.time_unit = data.time_unit # type: str
         self.max_result = data.max_result # type: int
         self.channel_index = data.channel_index # type: int
         self.download_path = data.download_path # type: str
