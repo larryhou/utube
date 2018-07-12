@@ -229,7 +229,8 @@ def decode_media_assets(movie_id:str)->Dict[int, MediaAsset]:
     return asset_map
 
 def check_movie(movie_id:str):
-    decode_media_assets(movie_id)
+    for tag, media in decode_media_assets(movie_id).items():
+        print(media)
 
 def check_channel(channel:str):
     description_printed = False
