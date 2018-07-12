@@ -323,7 +323,7 @@ if __name__ == '__main__':
     arguments = argparse.ArgumentParser()
     arguments.add_argument('--command', '-c', choices=commands.option_choices(), help='command')
     arguments.add_argument('--tag', '-t', type=int, help='Youtube media tag, you can get tag list $ ./utube.py -c check-movie --url xxx')
-    arguments.add_argument('--channel', default='UCQT2Ai7hQMnnvVTGd6GdrOQ', help='Youtube channel id')
+    arguments.add_argument('--channel', '-l', default='UCQT2Ai7hQMnnvVTGd6GdrOQ', help='Youtube channel id')
     arguments.add_argument('--time-span', '-s', default=7, type=int, help='time span')
     arguments.add_argument('--time-unit', '-u', default='d', choices=['s', 'm', 'h', 'd'], help='s:second m:minute h:hour d:day')
     arguments.add_argument('--max-result', '-m', default=20, type=int, help='max search result')
