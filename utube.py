@@ -325,10 +325,10 @@ if __name__ == '__main__':
     arguments.add_argument('--tag', '-t', type=int, help='Youtube media tag, you can get tag list $ ./utube.py -c check-movie --url xxx')
     arguments.add_argument('--channel', '-l', default='UCQT2Ai7hQMnnvVTGd6GdrOQ', help='Youtube channel id')
     arguments.add_argument('--time-span', '-s', default=7, type=int, help='time span')
-    arguments.add_argument('--time-unit', '-u', default='d', choices=['s', 'm', 'h', 'd'], help='s:second m:minute h:hour d:day')
+    arguments.add_argument('--time-unit', '-n', default='d', choices=['s', 'm', 'h', 'd'], help='s:second m:minute h:hour d:day')
     arguments.add_argument('--max-result', '-m', default=20, type=int, help='max search result')
     arguments.add_argument('--channel-index', '-i', type=int, choices=range(len(CHANNEL_SETTING)))
-    arguments.add_argument('--url', help='Youtube video page url')
+    arguments.add_argument('--url', '-u', help='Youtube video page url')
     arguments.add_argument('--download-path', '-d', help='used for downloaded videos')
     global options
     options = ArgumentOptions(data=arguments.parse_args(sys.argv[1:]))
