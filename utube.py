@@ -265,7 +265,9 @@ def download(url:str, file_name:str):
     temp_file_path = '{}.dl'.format(download_file_path)
     with open(temp_file_path, 'wb') as fp:
         progress = tqdm.tqdm(total=math.ceil(total), unit='B', unit_scale=True)
+        progress.clear()
         for data in response.iter_content(block):
+            if not data: continue
             progress.update(len(data))
             wrote = wrote + len(data)
             fp.write(data)
