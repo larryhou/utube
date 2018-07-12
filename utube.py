@@ -69,7 +69,7 @@ class MediaAsset(object):
         return '{}.{}'.format(self.title, self.extension)
 
     def __repr__(self):
-        field_name_list = [('itag', '{:>3d}'), ('file_type', '{:10s}'), ('quality', '{:>6s}'), ('resolution', '{:9s}'), ('fps', '{:2d}'),
+        field_name_list = [('itag', '{:>3d}'), ('file_type', '{:10s}'), ('quality', '{:>7s}'), ('resolution', '{:9s}'), ('fps', '{:2d}'),
                            ('codecs', '{:11s}'), ('length', CurrencyFormatter(12))]  # type: List[Tuple[str, str]]
         data = io.StringIO()
         for field_name, formatter in field_name_list:
