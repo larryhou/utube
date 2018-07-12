@@ -209,7 +209,7 @@ def decode_media_2(data:Dict):
 def decode_media_assets(movie_id:str)->Dict[int, MediaAsset]:
     params = decode_parameters('el=embedded&ps=default&eurl=&gl=US&hl=en')
     params['video_id'] = movie_id
-    response = requests.get('http://www.youtube.com/get_video_info', params=params)
+    response = requests.get('https://www.youtube.com/get_video_info', params=params)
     movie_info = decode_parameters(response.text)
     title = movie_info.get('title')
     asset_map = {} # type: Dict[int, MediaAsset]
