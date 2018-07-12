@@ -39,6 +39,7 @@ class ArgumentOptions(object):
         self.max_result = data.max_result # type: int
         self.channel_index = data.channel_index # type: int
         self.download_path = data.download_path # type: str
+        self.verbose = data.verbose # type: bool
 
 class CurrencyFormatter(object):
     def __init__(self, length:int = 10, align_right:bool = True):
@@ -218,13 +219,13 @@ def decode_media_assets(movie_id:str)->Dict[int, MediaAsset]:
         media = decode_media_1(download_info)
         media.title = title
         asset_map[media.itag] = media
-        print(media)
+        if options.verbose: print(media)
     for item in movie_info.get('url_encoded_fmt_stream_map').split(','):
         download_info = decode_parameters(item)
         media = decode_media_2(download_info)
         asset_map[media.itag] = media
         media.title = title
-        print(media)
+        if options.verbose: print(media)
     return asset_map
 
 def check_movie(movie_id:str):
@@ -265,12 +266,12 @@ def download(url:str, file_name:str):
     temp_file_path = '{}.dl'.format(download_file_path)
     with open(temp_file_path, 'wb') as fp:
         progress = tqdm.tqdm(total=math.ceil(total), unit='B', unit_scale=True)
-        progress.clear()
         for data in response.iter_content(block):
             if not data: continue
             progress.update(len(data))
             wrote = wrote + len(data)
             fp.write(data)
+        progress.close()
     if total != 0 and wrote != total:
         print("download failed")
     else:
@@ -333,6 +334,7 @@ if __name__ == '__main__':
     arguments.add_argument('--channel-index', '-i', type=int, choices=range(len(CHANNEL_SETTING)))
     arguments.add_argument('--url', '-u', help='Youtube video page url')
     arguments.add_argument('--download-path', '-d', help='used for downloaded videos')
+    arguments.add_argument('--verbose', '-v', action='store_true', help='verbose print')
     global options
     options = ArgumentOptions(data=arguments.parse_args(sys.argv[1:]))
     target_channel = options.channel
