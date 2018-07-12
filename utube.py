@@ -244,8 +244,8 @@ def check_movie(movie_id:str):
 
 def check_channel(channel:str):
     result = query_api_channel_search(channel=channel, max_result=options.max_result,
-                                      fields='items(snippet(title,publishedAt),contentDetails(videoId))',
-                                      part='snippet,contentDetails')
+                                      fields='items(snippet(title,publishedAt),id(videoId))',
+                                      part='snippet,id')
     for item in result.get('items'):
         snippet = item['snippet']
         title = snippet['title']
