@@ -13,10 +13,10 @@ CHANNEL_SETTING = [
 ]
 
 class commands(object):
-    check_movie = 'check-movie'
-    check_channel = 'check-channel'
-    download_movie = 'download-movie'
+    download = 'download'
+    check = 'check'
     download_channel = 'download-channel'
+    check_channel = 'check-channel'
 
     @classmethod
     def option_choices(cls):
@@ -340,11 +340,11 @@ if __name__ == '__main__':
         assert target_channel
         assert options.tag
         download_channel(channel=target_channel)
-    elif options.command == commands.download_movie:
+    elif options.command == commands.download:
         assert options.url
         assert options.tag
         download_movie(get_movie_id(options.url))
-    elif options.command == commands.check_movie:
+    elif options.command == commands.check:
         assert options.url
         check_movie(get_movie_id(options.url))
     elif options.command == commands.check_channel:
