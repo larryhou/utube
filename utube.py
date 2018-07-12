@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import requests, json, argparse, sys, re, urllib, enum, io, tqdm, math, shutil, os
+import requests, json, argparse, sys, re, urllib, enum, io, tqdm, math, shutil, os, pyquery
 from typing import Tuple,List,Dict
 
 YOUTUBE_API_KEY = 'AIzaSyCyLSmcEDJt3HaLFK0_LdJYPkq0RFAVzKA'
@@ -210,13 +210,16 @@ def decode_media_2(data:Dict):
     media.extension = media.file_type.split('/')[-1]
     return media
 
-def decode_media_assets(movie_id:str)->Dict[int, MediaAsset]:
-    params = decode_parameters('el=embedded&ps=default&eurl=&gl=US&hl=en')
-    params['video_id'] = movie_id
-    response = requests.get('https://www.youtube.com/get_video_info', params=params)
-    movie_info = decode_parameters(response.text)
+def decode_media_assets(movie_id:str, movie_info:Dict = None)->Dict[int, MediaAsset]:
+    dont_retry = False
+    if not movie_info:
+        params = decode_parameters('el=embedded&ps=default&eurl=&gl=US&hl=en')
+        params['video_id'] = movie_id
+        response = requests.get('https://www.youtube.com/get_video_info', params=params)
+        movie_info = decode_parameters(response.text)
+    else:
+        dont_retry = True
     title = movie_info.get('title')
-    # print(movie_info)
     asset_map = {} # type: Dict[int, MediaAsset]
     if 'adaptive_fmts' in movie_info:
         for item in movie_info.get('adaptive_fmts').split(','):
@@ -226,14 +229,31 @@ def decode_media_assets(movie_id:str)->Dict[int, MediaAsset]:
             media.title = title
             asset_map[media.itag] = media
             if options.verbose: print(media)
-    if 'url_encoded_fmt_stream_map' in movie_info:
-        for item in movie_info.get('url_encoded_fmt_stream_map').split(','):
+    url_encoded_fmt_stream_map = movie_info.get('url_encoded_fmt_stream_map')
+    if url_encoded_fmt_stream_map:
+        for item in url_encoded_fmt_stream_map.split(','):
             download_info = decode_parameters(item)
             if not download_info: continue
             media = decode_media_2(download_info)
             asset_map[media.itag] = media
             media.title = title
             if options.verbose: print(media)
+    else:
+        if dont_retry: return
+        html = pyquery.PyQuery(url='https://www.youtube.com/watch?v={}'.format(movie_id))
+        script = re.sub(r'^.+ytplayer\.config\s*\=\s*', '', html.find('div#player-api').next().next().text())
+        count, length = -1, 0
+        for n in range(len(script)):
+            char = script[n]
+            if char == '{':
+                if count == -1: count = 0
+                count += 1
+            if char == '}':
+                count -= 1
+            if n > 1 and count == 0:
+                length = n + 1
+                break
+        return decode_media_assets(movie_id, movie_info=json.loads(script[:length])['args'])
     return asset_map
 
 def check_movie(movie_id:str):
