@@ -38,6 +38,7 @@ class ArgumentOptions(object):
         self.time_unit = data.time_unit # type: str
         self.max_result = data.max_result # type: int
         self.channel_index = data.channel_index # type: int
+        self.download_path = data.download_path # type: str
 
 class CurrencyFormatter(object):
     def __init__(self, length:int = 10, align_right:bool = True):
@@ -254,9 +255,15 @@ def download(url:str, file_name:str):
     response = requests.get(url, stream=True)
     total = parse_int(response.headers.get('content-length'))
     block, wrote = 1024, 0
-    if os.path.exists(file_name): return
-    download_name = '{}.dl'.format(file_name)
-    with open(download_name, 'wb') as fp:
+    if options.download_path:
+        if not os.path.exists(options.download_path):
+            os.makedirs(options.download_path)
+        download_file_path = os.path.join(options.download_path, file_name)
+    else:
+        download_file_path = file_name
+    if os.path.exists(download_file_path): return
+    temp_file_path = '{}.dl'.format(download_file_path)
+    with open(temp_file_path, 'wb') as fp:
         for data in tqdm.tqdm(response.iter_content(block),
                               total=math.ceil(total // block), unit='KB', unit_scale=True):
             wrote = wrote + len(data)
@@ -264,7 +271,7 @@ def download(url:str, file_name:str):
     if total != 0 and wrote != total:
         print("download failed")
     else:
-        shutil.move(download_name, file_name)
+        shutil.move(temp_file_path, download_file_path)
 
 def download_channel(channel):
     description_printed = False
@@ -322,6 +329,7 @@ if __name__ == '__main__':
     arguments.add_argument('--max-result', '-m', default=20, type=int, help='max search result')
     arguments.add_argument('--channel-index', '-i', type=int, choices=range(len(CHANNEL_SETTING)))
     arguments.add_argument('--url', help='Youtube video page url')
+    arguments.add_argument('--download-path', '-d', help='used for downloaded videos')
     global options
     options = ArgumentOptions(data=arguments.parse_args(sys.argv[1:]))
     target_channel = options.channel
