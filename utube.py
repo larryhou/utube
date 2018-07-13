@@ -252,8 +252,8 @@ def decode_media_assets(movie_id:str, movie_info:Dict = None)->Dict[int, MediaAs
         headers = {
             'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Safari/605.1.15',
             'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language':'en-us',
             'Accept-Encoding':'br, gzip, deflate',
+            'Accept-Language':'en-us',
             'Connection':'keep-alive'
         }
         response = requests.get('https://www.youtube.com/get_video_info', params=params, headers=headers)
