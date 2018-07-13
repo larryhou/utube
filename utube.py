@@ -12,6 +12,12 @@ CHANNEL_SETTING = [
     'UCtAIPjABiQD3qjlEl1T5VpA'
 ]
 
+safari_browser_headers = {
+    'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Safari/605.1.15',
+    'Accept-Language':'en-us',
+    'Connection':'keep-alive'
+}
+
 class commands(object):
     download = 'download'
     check = 'check'
@@ -249,14 +255,10 @@ def decode_media_assets(movie_id:str, movie_info:Dict = None)->Dict[int, MediaAs
     if not movie_info:
         params = decode_parameters('el=embedded&ps=default&gl=US&hl=en')
         params['video_id'] = movie_id
-        headers = {
-            'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Safari/605.1.15',
-            'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Encoding':'br, gzip, deflate',
-            'Accept-Language':'en-us',
-            'Connection':'keep-alive'
-        }
-        response = requests.get('https://www.youtube.com/get_video_info', params=params, headers=headers)
+        watch_headers = safari_browser_headers.copy()
+        watch_headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        watch_headers['Accept-Encoding'] = 'br, gzip, deflate'
+        response = requests.get('https://www.youtube.com/get_video_info', params=params, headers=watch_headers)
         movie_info = decode_parameters(response.text)
     else:
         dont_retry = True
@@ -282,7 +284,7 @@ def decode_media_assets(movie_id:str, movie_info:Dict = None)->Dict[int, MediaAs
             if options.verbose: print(media)
     else:
         if dont_retry: return {}
-        response = requests.get(url='https://www.youtube.com/watch?v={}'.format(movie_id))
+        response = requests.get(url='https://www.youtube.com/watch?v={}'.format(movie_id), headers=safari_browser_headers)
         if response.status_code != 200:
             print(response.text)
             return
@@ -335,7 +337,7 @@ def download_movie(movie_id:str):
 
 def download(url:str, file_name:str):
     print(file_name, url)
-    response = requests.get(url, stream=True, headers={'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Safari/605.1.15'})
+    response = requests.get(url, stream=True, headers=safari_browser_headers)
     total = parse_int(response.headers.get('content-length'))
     block, wrote = 1024, 0
     if options.download_path:
