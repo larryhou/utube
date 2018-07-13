@@ -55,6 +55,13 @@ class CurrencyFormatter(object):
     def format(self, value:int):
         return self.formatter.format('{:,}'.format(value))
 
+class BitrateFormatter(object):
+    def __init__(self, length:int = 10, align_right:bool = True):
+        self.formatter = '{{:{}{}}}Kb/s'.format('>' if align_right else '<',length)
+
+    def format(self, value:int):
+        return self.formatter.format(value//1024)
+
 class MediaAsset(object):
     def __init__(self):
         self.itag = None # type: int
@@ -76,7 +83,7 @@ class MediaAsset(object):
 
     def __repr__(self):
         field_name_list = [('itag', '{:>3d}'), ('file_type', '{:10s}'), ('quality', '{:>7s}'), ('resolution', '{:9s}'), ('fps', '{:2d}'),
-                           ('codecs', '{:11s}'), ('length', CurrencyFormatter(12))]  # type: List[Tuple[str, str]]
+                           ('bitrate', BitrateFormatter(8, True)),('codecs', '{:11s}'), ('length', CurrencyFormatter(12))]  # type: List[Tuple[str, str]]
         data = io.StringIO()
         for field_name, formatter in field_name_list:
             value = self.__getattribute__(field_name)
