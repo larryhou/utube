@@ -44,7 +44,7 @@ class ArgumentOptions(object):
         self.channel = data.channel # type: str
         self.max_result = data.max_result # type: int
         self.channel_index = data.channel_index # type: int
-        self.download_path = data.download_path # type: str
+        self.output_path = data.output_path # type: str
         self.verbose = data.verbose # type: bool
         self.playlist = data.playlist # type: str
 
@@ -341,10 +341,10 @@ def download(url:str, file_name:str):
     response = requests.get(url, stream=True, headers=safari_browser_headers)
     total = parse_int(response.headers.get('content-length'))
     block, wrote = 1024, 0
-    if options.download_path:
-        if not os.path.exists(options.download_path):
-            os.makedirs(options.download_path)
-        download_file_path = os.path.join(options.download_path, file_name)
+    if options.output_path:
+        if not os.path.exists(options.output_path):
+            os.makedirs(options.output_path)
+        download_file_path = os.path.join(options.output_path, file_name)
     else:
         download_file_path = file_name
     if os.path.exists(download_file_path): return
@@ -389,7 +389,7 @@ if __name__ == '__main__':
     arguments.add_argument('--max-result', '-m', default=20, type=int, help='max search result')
     arguments.add_argument('--channel-index', '-i', type=int, choices=range(len(CHANNEL_SETTING)))
     arguments.add_argument('--url', '-u', help='Youtube video page url')
-    arguments.add_argument('--download-path', '-d', help='used for downloaded videos')
+    arguments.add_argument('--output-path', '-o', help='used for downloaded videos')
     arguments.add_argument('--verbose', '-v', action='store_true', help='verbose print')
     arguments.add_argument('--playlist', '-p', help='Youtube playlist id')
     global options
