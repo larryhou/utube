@@ -247,10 +247,10 @@ def decode_player_api(content:bytes)->Dict:
 def decode_media_assets(movie_id:str, movie_info:Dict = None)->Dict[int, MediaAsset]:
     dont_retry = False
     if not movie_info:
-        response = requests.get(url='https://www.youtube.com/watch?v={}'.format(movie_id))
-        timestamp = time.clock()
-        movie_info = decode_player_api(response.content)
-        if options.verbose: print('decode_player_api {:.3f}s'.format(time.clock() - timestamp))
+        params = decode_parameters('el=embedded&ps=default&gl=US&hl=en')
+        params['video_id'] = movie_id
+        response = requests.get('https://www.youtube.com/get_video_info', params=params)
+        movie_info = decode_parameters(response.text)
     else:
         dont_retry = True
     title = movie_info.get('title')
@@ -275,10 +275,13 @@ def decode_media_assets(movie_id:str, movie_info:Dict = None)->Dict[int, MediaAs
             if options.verbose: print(media)
     else:
         if dont_retry: return {}
-        params = decode_parameters('el=embedded&ps=default&gl=US&hl=en')
-        params['video_id'] = movie_id
-        response = requests.get('https://www.youtube.com/get_video_info', params=params)
-        api_data = decode_parameters(response.text)
+        response = requests.get(url='https://www.youtube.com/watch?v={}'.format(movie_id))
+        if response.status_code != 200:
+            print(response.text)
+            return
+        timestamp = time.clock()
+        api_data = decode_player_api(response.content)
+        if options.verbose: print('decode_player_api {:.3f}s'.format(time.clock() - timestamp))
         return decode_media_assets(movie_id, movie_info=api_data)
     return asset_map
 
