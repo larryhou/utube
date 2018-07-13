@@ -356,11 +356,15 @@ def download(url:str, file_name:str):
             progress.update(len(data))
             wrote = wrote + len(data)
             fp.write(data)
+        if fp.tell() == 0:
+            fp.close()
+            os.remove(fp.name)
         progress.close()
-    if total != 0 and wrote != total:
-        print("download failed")
-    else:
-        shutil.move(temp_file_path, download_file_path)
+    if total != 0:
+        if wrote != total:
+            print("download failed")
+        else:
+            shutil.move(temp_file_path, download_file_path)
 
 def download_channel(channel):
     description_printed = False
