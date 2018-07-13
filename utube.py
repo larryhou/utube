@@ -337,6 +337,7 @@ def download_movie(movie_id:str):
 
 def download(url:str, file_name:str):
     print(file_name, url)
+    file_name = re.sub(r'[()]', '', re.sub(r'[/|]', '-', file_name))
     response = requests.get(url, stream=True, headers=safari_browser_headers)
     total = parse_int(response.headers.get('content-length'))
     block, wrote = 1024, 0
