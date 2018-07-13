@@ -249,7 +249,14 @@ def decode_media_assets(movie_id:str, movie_info:Dict = None)->Dict[int, MediaAs
     if not movie_info:
         params = decode_parameters('el=embedded&ps=default&gl=US&hl=en')
         params['video_id'] = movie_id
-        response = requests.get('https://www.youtube.com/get_video_info', params=params)
+        headers = {
+            'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Safari/605.1.15',
+            'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language':'en-us',
+            'Accept-Encoding':'br, gzip, deflate',
+            'Connection':'keep-alive'
+        }
+        response = requests.get('https://www.youtube.com/get_video_info', params=params, headers=headers)
         movie_info = decode_parameters(response.text)
     else:
         dont_retry = True
