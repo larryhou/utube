@@ -15,16 +15,16 @@ def download(video_id):
     if p.exists('{}.mkv'.format(filename)):
         print('~ {}.mkv'.format(filename))
         return
-    audio_file = '{}.m4a'.format(filename)
-    if not p.exists(audio_file):
-        if run('youtube-dl -f 140 "{}"'.format(youtube_url)) != 0:
-            return
     video_file = '{}.webm'.format(filename)
     if not p.exists(video_file):
         if run('youtube-dl -f 313 "{}"'.format(youtube_url)) != 0:
             if run('youtube-dl -f 248 "{}"'.format(youtube_url)) != 0:
                 if run('youtube-dl -f 247 "{}"'.format(youtube_url)) != 0:
                     return
+    audio_file = '{}.m4a'.format(filename)
+    if not p.exists(audio_file):
+        if run('youtube-dl -f 140 "{}"'.format(youtube_url)) != 0:
+            return
     run('ffmpeg -i "{}" -i "{}" -c copy -y "{}.mkv"'.format(audio_file, video_file, filename))
     os.remove(audio_file)
     os.remove(video_file)
