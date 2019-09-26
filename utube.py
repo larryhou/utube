@@ -124,18 +124,19 @@ def query_api_video(id, part = 'snippet,contentDetails,statistics'):
     }
     response = requests.get('https://www.googleapis.com/youtube/v3/videos', params=params)
     assert response.status_code == 200, tojson(response.json())
-    print(tojson(response.json()))
+    return response.json()
 
-def query_api_channel_search(channel:str, part:str = 'snippet', fields:str = None, max_result:int = 50):
+def query_api_channel_search(channel:str, part:str = 'snippet', fields:str = None, max_result:int = 50, order:str = 'date', next_page_token:str = None):
     params = {
         'channelId': channel,
         'part': part,
         'maxResults':max_result,
-        'order':'date',
+        'order': order,
         'safeSearch':'none',
         'type':'video',
         'key': YOUTUBE_API_KEY
     }
+    if next_page_token: params['pageToken'] = next_page_token
     if fields: params['fields'] = fields
     response = requests.get('https://www.googleapis.com/youtube/v3/search', params=params)
     assert response.status_code == 200, tojson(response.json())
