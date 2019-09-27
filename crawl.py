@@ -41,10 +41,12 @@ def main():
         os.chdir(channel_path)
         next_page_token = None
         while True:
-            results = utube.query_api_channel_search(channel=channel, fields='nextPageToken,items(id(videoId))', max_result=50, order=options.order, next_page_token=next_page_token) # type: dict
+            results = utube.query_api_channel_search(channel=channel, fields='nextPageToken,items(id(videoId),snippet(publishedAt, title))', max_result=50, order=options.order, next_page_token=next_page_token) # type: dict
             next_page_token = results.get('nextPageToken')
             items = results.get('items') # type: list
-            for it in items: download(video_id=it['id']['videoId'])
+            for it in items:
+                print('{}|{}|{}'.format(it['id']['videoId'], it['snippet']['publishedAt'], it['snippet']['title']))
+                download(video_id=it['id']['videoId'])
             if not next_page_token: break
 
 if __name__ == '__main__':
