@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import utube
-import argparse, sys, os, json, re, shutil
+import argparse, sys, os, json, re, shutil, io
 import os.path as p
 
 def run(command):
@@ -17,10 +17,19 @@ def download(video_id):
         return
     video_file = '{}.webm'.format(filename)
     if not p.exists(video_file):
-        if run('youtube-dl -f 313 "{}"'.format(youtube_url)) != 0:
-            if run('youtube-dl -f 248 "{}"'.format(youtube_url)) != 0:
-                if run('youtube-dl -f 247 "{}"'.format(youtube_url)) != 0:
-                    return
+        format_map = {}
+        format_context = os.popen('youtube-dl -F "{}"'.format(youtube_url)).read() # type: str
+        stream = io.StringIO(format_context)
+        pattern = re.compile(r'^(\d{,3})\s')
+        for line in stream.readlines():
+            match = pattern.search(line)
+            if not match: continue
+            format_map[int(match.group(1))] = line[:-1]
+        for code in (313, 271, 248, 247, -1):
+            if code == -1: return
+            if code not in format_map: continue
+            print(format_map.get(code))
+            if run('youtube-dl -f {} "{}"'.format(code, youtube_url)) != 0: return
     audio_file = '{}.m4a'.format(filename)
     if not p.exists(audio_file):
         if run('youtube-dl -f 140 "{}"'.format(youtube_url)) != 0:
